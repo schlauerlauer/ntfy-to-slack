@@ -131,13 +131,17 @@ func waitForNtfyMessage() error {
 		case "message":
 			slog.Info("sending message", "title", msg.Title, "message", msg.Message)
 			if msg.Title != "" {
-				go sendToSlack(&slackMessage{
+				if err := sendToSlack(&slackMessage{
 					Text: "**" + msg.Title + "**: " + msg.Message,
-				})
+				}); err != nil {
+					slog.Error("error sending message", "err", err)
+				}
 			} else {
-				go sendToSlack(&slackMessage{
+				if err := sendToSlack(&slackMessage{
 					Text: msg.Message,
-				})
+				}); err != nil {
+					slog.Error("error sending message", "err", err)
+				}
 			}
 			continue
 		default:
@@ -169,7 +173,9 @@ func sendToSlack(webhook *slackMessage) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 3 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
