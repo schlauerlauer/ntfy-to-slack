@@ -112,10 +112,9 @@ func waitForNtfyMessage() error {
 	}
 	defer resp.Body.Close()
 
-	var msg ntfyMessage
-
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
+		var msg ntfyMessage
 		err := json.Unmarshal([]byte(scanner.Text()), &msg)
 		if err != nil {
 			slog.Error("error while processing ntfy message", "err", err, "text", scanner.Text())
